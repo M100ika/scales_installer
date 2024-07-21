@@ -1,11 +1,11 @@
 [Unit]
-Description=feeder_v71.service Service
+Description=pcf.service Service
 
 After=network.target
 
 [Service]
-ExecStart=/usr/bin/python /home/pi/feeder_v71/src/main_feeder.py
-WorkingDirectory=/home/pi/feeder_v71/
+ExecStart=/usr/bin/python3 /home/pi/scales6.1/main_pcf.py
+WorkingDirectory=/home/pi/
 StandardOutput=inherit
 StandardError=inherit
 Restart=always
