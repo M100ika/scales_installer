@@ -14,7 +14,7 @@ cd scales7.1
 git init
 git clone https://github.com/M100ika/scales_submodule.git
 git config --global --add safe.directory /home/pi/scales7.1
-echo 'git done'
+echo "Git репозиторий настроен"
 
 
 # Включаем systemd-networkd
