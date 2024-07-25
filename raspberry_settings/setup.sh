@@ -32,12 +32,35 @@ if nmcli connection show | grep -q 'eth0'; then
     echo_green "Существующее подключение eth0 удалено"
 fi
 
-# Настройка eth0 через NetworkManager
-nmcli connection add type ethernet ifname eth0 con-name eth0 ip4 192.168.1.249/24
-nmcli connection modify eth0 ipv4.method manual
-nmcli connection up eth0
+# Отключение управления NetworkManager для eth0
+echo -e "[keyfile]\nunmanaged-devices=interface-name:eth0" >> /etc/NetworkManager/NetworkManager.conf
+systemctl restart NetworkManager
+echo_green "NetworkManager больше не управляет интерфейсом eth0."
 
-echo_green "Настройка сетевого интерфейса eth0 завершена."
+# Включение и запуск systemd-networkd
+systemctl enable systemd-networkd
+systemctl start systemd-networkd
+echo_green "systemd-networkd активирован и запущен."
+
+# Создание конфигурации для eth0 через systemd-networkd
+cat <<EOF > /etc/systemd/network/10-eth0.network
+[Match]
+Name=eth0
+
+[Network]
+Address=192.168.1.249/24
+EOF
+
+systemctl restart systemd-networkd
+echo_green "Настройка локального интерфейса eth0 через systemd-networkd завершена."
+
+# Подтверждение изменений
+ip addr show eth0
+echo_green "Конфигурация интерфейса eth0:"
+echo "$(ip addr show eth0)"
+
+# Завершение скрипта
+echo_green "Настройка eth0 завершена."
 
 # Создание или обновление Wi-Fi подключения
 nmcli connection add type wifi ifname wlan0 con-name "REET1212scales-auto" autoconnect yes ssid 'REET1212scales' || \
