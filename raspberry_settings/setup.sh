@@ -29,6 +29,19 @@ nmcli connection up eth0
 
 echo "Настройка сетевого интерфейса eth0 завершена."
 
+# Настройка WiFi интерфейса wlan0
+nmcli device wifi connect 'REET1212scales' password '19571212' ifname wlan0
+# Проверяем и настраиваем автоматическое подключение для SSID 'REET1212scales'
+SSID_CONNECTION_NAME=$(nmcli -t -f NAME connection show | grep 'REET1212scales')
+if [ -n "$SSID_CONNECTION_NAME" ]; then
+    nmcli connection modify "$SSID_CONNECTION_NAME" connection.autoconnect yes
+    echo "Автоматическое подключение для $SSID_CONNECTION_NAME включено"
+else
+    echo "SSID REET1212scales не найден в сохраненных подключениях"
+fi
+
+echo "WiFi интерфейс wlan0 настроен с SSID REET1212scales"
+
 cd "$BASE_DIR" 
 
 if [ ! -d ".git" ]; then
