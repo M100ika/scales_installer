@@ -1,10 +1,16 @@
 #!/bin/bash
 
+set -e  # Прекращает выполнение скрипта при возникновении ошибки
+
 BASE_DIR="/home/pi/scales7.1"
 DOWNLOADS="/home/pi/Downloads/" 
 
 echo_green() {
     echo -e "\e[32m$1\e[0m"
+}
+
+echo_red() {
+    echo -e "\e[31m$1\e[0m"
 }
 
 # Проверка наличия прав суперпользователя
@@ -41,7 +47,7 @@ if [ -n "$SSID_CONNECTION_NAME" ]; then
     nmcli connection modify "$SSID_CONNECTION_NAME" connection.autoconnect yes
     echo_green "Автоматическое подключение для $SSID_CONNECTION_NAME включено"
 else
-    echo_green "SSID REET1212scales не найден в сохраненных подключениях"
+    echo_red "SSID REET1212scales не найден в сохраненных подключениях"
 fi
 
 echo_green "WiFi интерфейс wlan0 настроен с SSID REET1212scales"
@@ -105,3 +111,10 @@ dpkg -i teamviewer-host_armhf.deb
 echo_green "Установка TeamViewer завершена"
 
 echo_green "Настройка завершена"
+
+# Условие удаления скрипта: только если нет ошибок
+if [ $? -eq 0 ]; then
+    rm -- "$0"
+    echo_green "Скрипт успешно самоудалился."
+fi
+exit 0
