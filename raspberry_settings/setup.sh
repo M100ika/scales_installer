@@ -33,8 +33,8 @@ if nmcli connection show | grep -q 'eth0'; then
 fi
 
 # Настройка eth0 через NetworkManager
-nmcli connection add type ethernet ifname eth0 con-name eth0 ip4 192.168.1.249/24 gw4 192.168.1.1
-nmcli connection modify eth0 ipv4.dns "192.168.1.1 8.8.8.8"
+nmcli connection add type ethernet ifname eth0 con-name eth0 ip4 192.168.1.249/24
+nmcli connection modify eth0 ipv4.method manual
 nmcli connection up eth0
 
 echo_green "Настройка сетевого интерфейса eth0 завершена."
