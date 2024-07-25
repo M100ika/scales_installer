@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e  # Прекращает выполнение скрипта при возникновении ошибки
+set -euo pipefail 
 
 BASE_DIR="/home/pi/scales7.1"
 DOWNLOADS="/home/pi/Downloads/" 
