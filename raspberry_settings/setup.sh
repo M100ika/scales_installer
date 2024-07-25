@@ -6,9 +6,13 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
+sudo dpkg -i /home/pi/teamviewer-host_15.55.3_armhf.deb
+echo "Установка teamviewer завершена" 
+
+mkdir scales7.1
+cd scales7.1
 git init
 git clone https://github.com/M100ika/scales_submodule.git
-cd scales_submodule/
 git config --global --add safe.directory /home/pi/scales7.1
 echo 'git done'
 
@@ -32,11 +36,8 @@ EOF
 systemctl restart systemd-networkd
 
 echo "Настройка сетевого интерфейса eth0 завершена."
-cp pcf.service /etc/systemd/system
+cp scales_submodule/services/pcf.service /etc/systemd/system
 echo "Копирование pcf.service завершено" 
-
-sudo dpkg -i /home/pi/teamviewer-host_15.55.3_armhf.deb
-echo "Установка teamviewer завершена" 
 
 sudo systemctl restart pcf.service
 sudo systemctl status pcf.service
