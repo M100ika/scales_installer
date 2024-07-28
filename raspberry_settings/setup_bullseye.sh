@@ -13,10 +13,6 @@ echo_red() {
     echo -e "\e[31m$1\e[0m"
 }
 
-sudo apt-get update
-sudo apt-get install libminizip1
-sudo apt-get install -f 
-# Проверка наличия прав суперпользователя
 if [ "$(id -u)" -ne 0 ]; then
     echo_red "Этот скрипт нужно запускать с правами суперпользователя (root)." >&2
     exit 1
@@ -30,41 +26,48 @@ else
     echo_green "Каталог $BASE_DIR уже существует"
 fi
 
-# Удаление существующего подключения eth0, если оно есть
-if nmcli connection show | grep -q 'eth0'; then
-    nmcli connection delete eth0
-    echo_green "Существующее подключение eth0 удалено"
+# Добавление сети в wpa_supplicant.conf
+WPA_SUPPLICANT_CONF="/etc/wpa_supplicant/wpa_supplicant.conf"
+NETWORK_BLOCK="
+network={
+    ssid=\"REET1212scales\"
+    psk=\"19571212\"
+    key_mgmt=WPA-PSK
+}
+"
+
+# Проверка наличия сети в wpa_supplicant.conf и добавление, если она отсутствует
+if ! grep -q "$NETWORK_BLOCK" "$WPA_SUPPLICANT_CONF"; then
+    echo_green "Добавление сети в $WPA_SUPPLICANT_CONF"
+    echo "$NETWORK_BLOCK" | sudo tee -a "$WPA_SUPPLICANT_CONF" > /dev/null
+else
+    echo_red "Сеть уже существует в $WPA_SUPPLICANT_CONF"
 fi
 
-# Настройка NetworkManager для исключения eth0
-echo -e "[keyfile]\nunmanaged-devices=interface-name:eth0" > /etc/NetworkManager/NetworkManager.conf
-systemctl restart NetworkManager
-echo_green "NetworkManager больше не управляет интерфейсом eth0."
+# Добавление конфигурации в dhcpcd.conf
+DHCPCD_CONF="/etc/dhcpcd.conf"
+DHCPCD_BLOCK="
+nodhcp
 
-sleep 30
+interface eth0
+static ip_address=192.168.1.249/24
+static routers=192.168.1.1
+static domain_name_servers=192.168.1.1 8.8.8.8 fd51:42f8:caae:d92::1
+"
 
-# Включение и запуск systemd-networkd
-systemctl enable systemd-networkd
-systemctl start systemd-networkd
-echo_green "systemd-networkd активирован и запущен."
+# Проверка наличия конфигурации в dhcpcd.conf и добавление, если она отсутствует
+if ! grep -q "interface eth0" "$DHCPCD_CONF"; then
+    echo_green "Добавление конфигурации в $DHCPCD_CONF"
+    echo "$DHCPCD_BLOCK" | sudo tee -a "$DHCPCD_CONF" > /dev/null
+else
+    echo_red "Конфигурация уже существует в $DHCPCD_CONF"
+fi
 
-# Конфигурация для eth0 через systemd-networkd
-cat <<EOF > /etc/systemd/network/10-eth0.network
-[Match]
-Name=eth0
+# Перезапуск служб для применения изменений
+echo_green "Перезапуск служб для применения изменений"
 
-[Network]
-Address=192.168.1.249/24
-EOF
-
-systemctl restart systemd-networkd
+echo_green "Настройки успешно применены."
 echo_green "Настройка локального интерфейса eth0 через systemd-networkd завершена."
-
-# # Создание или обновление Wi-Fi подключения
-# nmcli connection add type wifi ifname wlan0 con-name "REET1212scales-auto" autoconnect yes ssid 'REET1212scales' || \
-# nmcli connection modify "REET1212scales-auto" autoconnect yes wifi-sec.key-mgmt wpa-psk wifi-sec.psk '19571212'
-
-# echo_green "WiFi подключение 'REET1212scales-auto' настроено для автоматического подключения"
 
 # Установка Git репозитория
 cd "$BASE_DIR" 
@@ -96,7 +99,7 @@ else
     echo_green "Файл requirements.txt не найден"
 fi
 
-echo_green "Настройка виртуального окружения завершена"
+echo_green "Настройка виртуального окружения завершена"s
 
 # Копирование конфигурационных файлов
 cp "$BASE_DIR"/scales_submodule/services/config.ini "$BASE_DIR"/scales_submodule/src/
@@ -104,7 +107,7 @@ sudo chmod 777 "$BASE_DIR"/scales_submodule/src/config.ini
 chmod +x "$BASE_DIR"/scales_submodule/src/config.ini
 echo_green "Копирование config.ini завершено" 
 
-cp "$BASE_DIR"/scales_submodule/services/pcf.service /etc/systemd/system
+cp "$BASE_DIR"/scales_submodule/services/pcf.service /etc/systemd/system/
 echo_green "Копирование pcf.service завершено" 
 
 # Перезапуск и проверка статуса сервиса
@@ -118,10 +121,10 @@ fi
 echo_green "Настройка демона завершена"
 
 # Установка TeamViewer
-cd "$DOWNLOADS"
-wget https://download.teamviewer.com/download/linux/teamviewer-host_armhf.deb
-dpkg -i teamviewer-host_armhf.deb
-echo_green "Установка TeamViewer завершена"
+# cd "$DOWNLOADS"
+# wget https://download.teamviewer.com/download/linux/teamviewer-host_15.55.3_armhf.deb
+# dpkg -i teamviewer-host_armhf.deb
+# echo_green "Установка TeamViewer завершена"
 
 echo_green "Настройка завершена"
 
