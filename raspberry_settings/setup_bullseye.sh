@@ -30,9 +30,9 @@ fi
 WPA_SUPPLICANT_CONF="/etc/wpa_supplicant/wpa_supplicant.conf"
 NETWORK_BLOCK="
 network={
-    ssid=\"REET1212scales\"
-    psk=\"19571212\"
-    key_mgmt=WPA-PSK
+        ssid=\"REET1212scales\"
+        psk=\"19571212\"
+        key_mgmt=WPA-PSK
 }
 "
 
@@ -100,6 +100,8 @@ cp "$BASE_DIR"/scales_submodule/services/pcf.service /etc/systemd/system/
 echo_green "Копирование pcf.service завершено" 
 
 # Перезапуск и проверка статуса сервиса
+sudo systemctl enable pcf.service
+sudo systemctl start pcf.service
 sudo systemctl restart pcf.service
 if systemctl is-active --quiet pcf.service; then
     echo_green "Демон запущен"
