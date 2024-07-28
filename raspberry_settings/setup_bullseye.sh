@@ -37,31 +37,20 @@ network={
 "
 
 # Проверка наличия сети в wpa_supplicant.conf и добавление, если она отсутствует
-if ! grep -q "$NETWORK_BLOCK" "$WPA_SUPPLICANT_CONF"; then
-    echo_green "Добавление сети в $WPA_SUPPLICANT_CONF"
-    echo "$NETWORK_BLOCK" | sudo tee -a "$WPA_SUPPLICANT_CONF" > /dev/null
-else
-    echo_red "Сеть уже существует в $WPA_SUPPLICANT_CONF"
-fi
+echo_green "Добавление сети в $WPA_SUPPLICANT_CONF"
+echo "$NETWORK_BLOCK" | sudo tee -a "$WPA_SUPPLICANT_CONF" > /dev/null
+
 
 # Добавление конфигурации в dhcpcd.conf
 DHCPCD_CONF="/etc/dhcpcd.conf"
 DHCPCD_BLOCK="
-nodhcp
 
 interface eth0
-static ip_address=192.168.1.249/24
-static routers=192.168.1.1
-static domain_name_servers=192.168.1.1 8.8.8.8 fd51:42f8:caae:d92::1
-"
+static ip_address=192.168.1.249/24"
 
 # Проверка наличия конфигурации в dhcpcd.conf и добавление, если она отсутствует
-if ! grep -q "interface eth0" "$DHCPCD_CONF"; then
-    echo_green "Добавление конфигурации в $DHCPCD_CONF"
-    echo "$DHCPCD_BLOCK" | sudo tee -a "$DHCPCD_CONF" > /dev/null
-else
-    echo_red "Конфигурация уже существует в $DHCPCD_CONF"
-fi
+echo_green "Добавление конфигурации в $DHCPCD_CONF"
+echo "$DHCPCD_BLOCK" | sudo tee -a "$DHCPCD_CONF" > /dev/null
 
 # Перезапуск служб для применения изменений
 echo_green "Перезапуск служб для применения изменений"
