@@ -63,13 +63,14 @@ cd "$BASE_DIR"
 if [ ! -d ".git" ]; then
     git init
     git clone https://github.com/M100ika/scales_submodule.git
-    git config --global --add safe.directory "$BASE_DIR" 
+    git config --global --add safe.directory "$BASE_DIR"/scales_submodule 
     echo_green "Git репозиторий настроен"
 else
     echo_green "Git репозиторий уже существует"
 fi
 
 cd "$BASE_DIR"/scales_submodule
+mkdir scales_log/error_log
 
 # Установка виртуального окружения и зависимостей
 if [ ! -d "vscales" ]; then
