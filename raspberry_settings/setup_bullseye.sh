@@ -64,6 +64,8 @@ if [ ! -d ".git" ]; then
     git init
     git clone https://github.com/M100ika/scales_submodule.git
     git config --global --add safe.directory "$BASE_DIR"/scales_submodule 
+    sudo chown -R $(whoami) /home/pi/scales7.1
+    #git branch --set-upstream-to=origin/main main
     echo_green "Git репозиторий настроен"
 else
     echo_green "Git репозиторий уже существует"
