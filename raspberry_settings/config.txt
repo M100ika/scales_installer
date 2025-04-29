@@ -1,0 +1,51 @@
+# For more options and information see
+# http://rptl.io/configtxt
+# Some settings may impact device functionality. See link above for details
+
+# Uncomment some or all of these to enable the optional hardware interfaces
+#dtparam=i2c_arm=on
+#dtparam=i2s=on
+#dtparam=spi=on
+
+# Enable audio (loads snd_bcm2835)
+dtparam=audio=on
+
+# Automatically load overlays for detected cameras and DSI displays
+camera_auto_detect=1
+display_auto_detect=1
+
+# Automatically load initramfs files, if found
+auto_initramfs=1
+
+# Use “fake” KMS (firmware handles mode-setting) with V3D acceleration
+dtoverlay=vc4-fkms-v3d
+max_framebuffers=2
+
+# Disable overscan compensation
+disable_overscan=1
+
+# Run as fast as firmware/board allows
+arm_boost=1
+
+# FORCE HDMI ON even if hotplug not detected
+hdmi_force_hotplug=1
+
+# Boost HDMI signal strength (1–11; higher for longer/low-quality cables)
+config_hdmi_boost=4
+
+# HDMI group/mode: CEA 1080p @ 60 Hz
+hdmi_group=1
+hdmi_mode=16
+
+[cm4]
+# Enable host mode on built-in XHCI controller (only on CM4)
+otg_mode=1
+
+[cm5]
+# USB host mode overlay for CM5
+dtoverlay=dwc2,dr_mode=host
+
+[all]
+# hdmi_safe=1    # <-- leave commented: uses very low-res mode
+# disable_fw_kms_setup=1   # <-- leave commented
+# arm_64bit=1              # <-- only for 64-bit OS with kernel8.img
