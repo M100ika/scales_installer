@@ -10,42 +10,48 @@
 # Enable audio (loads snd_bcm2835)
 dtparam=audio=on
 
-# Automatically load overlays for detected cameras and DSI displays
+# Additional overlays and parameters are documented
+# /boot/firmware/overlays/README
+
+# Automatically load overlays for detected cameras
 camera_auto_detect=1
+
+# Automatically load overlays for detected DSI displays
 display_auto_detect=1
 
 # Automatically load initramfs files, if found
 auto_initramfs=1
 
-# Use “fake” KMS (firmware handles mode-setting) with V3D acceleration
-dtoverlay=vc4-fkms-v3d
+# Enable DRM VC4 V3D driver
+dtoverlay=vc4-kms-v3d
 max_framebuffers=2
 
-# Disable overscan compensation
+# Принудительный HDMI
+hdmi_force_hotplug=1
+hdmi_ignore_edid=0xa5000080   # игнорировать EDID, использовать указанный ниже режим
+hdmi_group=2                   # 2 = DMT (мониторный режим)
+hdmi_mode=82                   # DMT #82 = 1920×1080 60Hz
+hdmi_drive=2                   # звук и питание через HDMI
 disable_overscan=1
 
-# Run as fast as firmware/board allows
+# Don't have the firmware create an initial video= setting in cmdline.txt.
+# Use the kernel's default instead.
+#disable_fw_kms_setup=1
+
+# Disable compensation for displays with overscan
+disable_overscan=1
+
+# Run as fast as firmware / board allows
 arm_boost=1
 
-# FORCE HDMI ON even if hotplug not detected
-hdmi_force_hotplug=1
-
-# Boost HDMI signal strength (1–11; higher for longer/low-quality cables)
-config_hdmi_boost=4
-
-# HDMI group/mode: CEA 1080p @ 60 Hz
-hdmi_group=1
-hdmi_mode=16
-
 [cm4]
-# Enable host mode on built-in XHCI controller (only on CM4)
+# Enable host mode on the 2711 built-in XHCI USB controller.
+# This line should be removed if the legacy DWC2 controller is required
+# (e.g. for USB device mode) or if USB support is not required.
 otg_mode=1
 
 [cm5]
-# USB host mode overlay for CM5
 dtoverlay=dwc2,dr_mode=host
 
 [all]
-# hdmi_safe=1    # <-- leave commented: uses very low-res mode
-# disable_fw_kms_setup=1   # <-- leave commented
-# arm_64bit=1              # <-- only for 64-bit OS with kernel8.img
+

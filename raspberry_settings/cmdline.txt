@@ -1,0 +1,2 @@
+console=tty1 root=PARTUUID=7984cc50-02 rootfstype=ext4 fsck.repair=yes rootwait cfg80211.ieee80211_regdom=KZ consoleblank=0 vt.global_cursor_default=0
+
