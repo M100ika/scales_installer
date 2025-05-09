@@ -83,22 +83,25 @@ echo_green "Перезапуск служб для применения изме
 echo_green "Настройки успешно применены."
 echo_green "Настройка локального интерфейса eth0 через systemd-networkd завершена."
 
-# Установка Git репозитория
-cd "$BASE_DIR" 
-if [ ! -d ".git" ]; then
-    git init
-    git clone https://github.com/M100ika/scales_submodule.git
-    git config --global --add safe.directory "$BASE_DIR"/scales_submodule 
-    chown -R $(whoami) /home/pi/scales7.1
-    #git branch --set-upstream-to=origin/main main
-    echo_green "Git репозиторий настроен"
+# Git clone
+SUBMODULE_DIR="$BASE_DIR/scales_submodule"
+if [ ! -d "$SUBMODULE_DIR/.git" ]; then
+    git clone https://github.com/M100ika/scales_submodule.git "$SUBMODULE_DIR"
+    echo_green "Git репозиторий scales_submodule клонирован"
 else
     echo_green "Git репозиторий уже существует"
 fi
 
-cd "$BASE_DIR"/scales_submodule
-mkdir scales_log
-mkdir scales_log/error_log
+# Настройка безопасности git
+git config --global --add safe.directory "$SUBMODULE_DIR"
+chown -R pi:pi "$BASE_DIR"
+
+# Настройка ветки
+cd "$SUBMODULE_DIR"
+git branch --set-upstream-to=origin/main main || echo "Ветка main ещё не создана"
+
+# Создание логов
+mkdir -p scales_log/error_log
 
 # Установка виртуального окружения и зависимостей
 if [ ! -d "vscales" ]; then
