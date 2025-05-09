@@ -120,7 +120,7 @@ else
     echo_green "Файл requirements.txt не найден"
 fi
 
-echo_green "Настройка виртуального окружения завершена"s
+echo_green "Настройка виртуального окружения завершена"
 
 # Копирование конфигурационных файлов
 cp "$BASE_DIR"/scales_submodule/services/config.ini "$BASE_DIR"/scales_submodule/src/
