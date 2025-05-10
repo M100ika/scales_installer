@@ -124,7 +124,7 @@ echo_green "Настройка виртуального окружения за�
 
 # Копирование конфигурационных файлов
 cp "$BASE_DIR"/scales_submodule/services/config.ini "$BASE_DIR"/scales_submodule/src/
-chmod 600 "$BASE_DIR"/scales_submodule/src/config.ini
+chmod 644 "$BASE_DIR"/scales_submodule/src/config.ini
 echo_green "Копирование config.ini завершено" 
 
 cp "$BASE_DIR"/scales_submodule/services/pcf.service /etc/systemd/system/
