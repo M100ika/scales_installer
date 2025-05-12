@@ -1,0 +1,17 @@
+#!/bin/sh -e
+
+{
+    echo "=== Начало загрузки $(date) ==="
+    echo "Запуск wpa_supplicant..."
+    wpa_supplicant -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf -f /bootfs/wifi_debug.log -d &
+    sleep 5
+    echo "Проверка состояния Wi-Fi..."
+    iwconfig wlan0 >> /bootfs/wifi_debug.log 2>&1
+    echo "Попытка получить IP..."
+    dhclient -v wlan0 >> /bootfs/wifi_debug.log 2>&1
+    echo "Итоговое состояние сети:"
+    ip a show wlan0 >> /bootfs/wifi_debug.log 2>&1
+    echo "=== Конец загрузки $(date) ==="
+} >> /bootfs/wifi_debug.log 2>&1
+
+exit 0

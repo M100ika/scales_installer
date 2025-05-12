@@ -33,23 +33,28 @@ touch "$BOOT_DIR/ssh"
 # echo "pi:$USERCONF_HASH" > "$BOOT_DIR/userconf.txt"
 
 # 4. Настройка автологина
-echo "=== 4. Настройка автологина с проверкой пути к agetty ==="
+echo "=== 3. Настройка автологина ==="
 AUTOLOGIN_DIR="$ROOTFS_DIR/etc/systemd/system/getty@tty1.service.d"
 mkdir -p "$AUTOLOGIN_DIR"
-
-# Явно задаём путь к agetty
-AGETTY_PATH="/sbin/agetty"
 
 cat <<EOF > "$AUTOLOGIN_DIR/autologin.conf"
 [Service]
 ExecStart=
-ExecStart=-$AGETTY_PATH --autologin pi --noclear %I \$TERM
+ExecStart=-/sbin/agetty --autologin pi --noclear %I \$TERM
 EOF
 
 # 5. Wi-Fi конфигурация
-echo "=== 5. Wi-Fi конфигурация ==="
-cp "/home/maxat/Projects/Agrarka/scales-installer/raspberry_settings/wpa_supplicant.conf" \
-   "$ROOTFS_DIR/etc/wpa_supplicant/wpa_supplicant.conf"
+echo "=== 4. Настройка Wi-Fi ==="
+WPA_CONF="/home/maxat/Projects/Agrarka/scales-installer/raspberry_settings/wpa_supplicant.conf"
+if [ -f "$WPA_CONF" ]; then
+  cp -v "$WPA_CONF" "$BOOT_DIR/wpa_supplicant.conf"
+  # Копируем также в rootfs для работы после первой загрузки
+  mkdir -p "$ROOTFS_DIR/etc/wpa_supplicant"
+  cp -v "$WPA_CONF" "$ROOTFS_DIR/etc/wpa_supplicant/wpa_supplicant.conf"
+else
+  echo "ERROR: Файл wpa_supplicant.conf не найден!" >&2
+  exit 1
+fi
 
 # 6. Копирование setup_bullseye.sh
 echo "=== 6. Копируем setup_bullseye.sh ==="
@@ -69,25 +74,54 @@ else
 fi
 
 # 8. Отключение raspi-config.service
-# echo "=== 8. Отключение raspi-config.service ==="
-# chroot "$ROOTFS_DIR" systemctl disable raspi-config.service || true
+echo "=== 8. Отключение raspi-config.service ==="
+chroot "$ROOTFS_DIR" systemctl disable raspi-config.service || true
 
 # 9. Добавление systemd-сервиса для разблокировки Wi-Fi
-echo "=== 9. Добавление unblock-wifi.service ==="
-cat <<EOF > "$ROOTFS_DIR/etc/systemd/system/unblock-wifi.service"
+# echo "=== 9. Добавление unblock-wifi.service ==="
+# cat <<EOF > "$ROOTFS_DIR/etc/systemd/system/unblock-wifi.service"
+# [Unit]
+# Description=Unblock Wi-Fi at boot
+# After=network-pre.target
+
+# [Service]
+# Type=oneshot
+# ExecStart=/usr/sbin/rfkill unblock wifi
+
+# [Install]
+# WantedBy=multi-user.target
+# EOF
+
+# ln -sf /etc/systemd/system/unblock-wifi.service \
+#        "$ROOTFS_DIR/etc/systemd/system/multi-user.target.wants/unblock-wifi.service"
+
+# 10. Создание сервиса для Wi-Fi
+echo "=== Создание сервиса для Wi-Fi ==="
+cat <<EOF > "$ROOTFS_DIR/etc/systemd/system/wifi-autoconnect.service"
 [Unit]
-Description=Unblock Wi-Fi at boot
-After=network-pre.target
+Description=AutoConnect to Wi-Fi
+After=network.target
+Wants=network-online.target
 
 [Service]
 Type=oneshot
-ExecStart=/usr/sbin/rfkill unblock wifi
+RemainAfterExit=yes
+ExecStart=/bin/sh -c '/sbin/wpa_supplicant -B -i wlan0 -c /etc/wpa_supplicant/wpa_supplicant.conf || true'
+ExecStart=/bin/sh -c '/sbin/dhclient wlan0 || true'
+ExecStop=/bin/sh -c '/sbin/wpa_cli terminate || true'
+ExecStop=/bin/sh -c '/sbin/dhclient -r wlan0 || true'
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-ln -sf /etc/systemd/system/unblock-wifi.service \
-       "$ROOTFS_DIR/etc/systemd/system/multi-user.target.wants/unblock-wifi.service"
+chroot "$ROOTFS_DIR" systemctl enable wifi-autoconnect.service
+
+# 11. Отключение интерактивных служб
+echo "=== Отключение интерактивных служб ==="
+chroot "$ROOTFS_DIR" systemctl disable raspi-config.service 2>/dev/null || true
+chroot "$ROOTFS_DIR" systemctl mask firstboot.service 2>/dev/null || true
+chroot "$ROOTFS_DIR" rm -f /etc/profile.d/raspi-config.sh 2>/dev/null
+
 
 echo "=== Всё готово ==="

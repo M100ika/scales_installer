@@ -51,40 +51,41 @@ else
     echo_green "Каталог $BASE_DIR уже существует"
 fi
 
-# Добавление сети в wpa_supplicant.conf
-WPA_SUPPLICANT_CONF="/etc/wpa_supplicant/wpa_supplicant.conf"
-NETWORK_BLOCK="
-network={
-        ssid=\"REET1212scales\"
-        psk=\"19571212\"
-        key_mgmt=WPA-PSK
-}
-"
 
-# Проверка наличия сети в wpa_supplicant.conf и добавление, если она отсутствует
-echo_green "Добавление сети в $WPA_SUPPLICANT_CONF"
-echo "$NETWORK_BLOCK" | tee -a "$WPA_SUPPLICANT_CONF" > /dev/null
-
-
-# Добавление конфигурации в dhcpcd.conf
 DHCPCD_CONF="/etc/dhcpcd.conf"
-DHCPCD_BLOCK="
+DHCPCD_BLOCK=$(cat <<EOF
 
+# Статическая настройка для eth0 (Ethernet)
 interface eth0
-static ip_address=192.168.1.249/24"
+static ip_address=192.168.1.249/24
+static routers=192.168.1.1
+static domain_name_servers=8.8.8.8 1.1.1.1
+nohook wpa_supplicant
+EOF
+)
 
-# Проверка наличия конфигурации в dhcpcd.conf и добавление, если она отсутствует
-echo_green "Добавление конфигурации в $DHCPCD_CONF"
-echo "$DHCPCD_BLOCK" | tee -a "$DHCPCD_CONF" > /dev/null
+# Добавим блок только если его ещё нет
+if ! grep -q "interface eth0" "$DHCPCD_CONF"; then
+    echo_green "Добавление конфигурации eth0 в $DHCPCD_CONF"
+    echo "$DHCPCD_BLOCK" | tee -a "$DHCPCD_CONF" > /dev/null
+else
+    echo_green "Конфигурация eth0 уже присутствует в $DHCPCD_CONF"
+fi
 
 # Перезапуск служб для применения изменений
 echo_green "Перезапуск служб для применения изменений"
 
 echo_green "Настройки успешно применены."
-echo_green "Настройка локального интерфейса eth0 через systemd-networkd завершена."
+echo_green "Настройка локального интерфейса eth0 через dhcpcd завершена."
 
 # Git clone
 SUBMODULE_DIR="$BASE_DIR/scales_submodule"
+if [ ! -d "$SUBMODULE_DIR" ]; then
+    git clone https://github.com/M100ika/scales_submodule.git "$SUBMODULE_DIR"
+    echo_green "Git репозиторий scales_submodule клонирован"
+else
+    echo_green "Каталог $SUBMODULE_DIR уже существует"
+fi
 if [ ! -d "$SUBMODULE_DIR/.git" ]; then
     git clone https://github.com/M100ika/scales_submodule.git "$SUBMODULE_DIR"
     echo_green "Git репозиторий scales_submodule клонирован"
@@ -98,10 +99,15 @@ chown -R pi:pi "$BASE_DIR"
 
 # Настройка ветки
 cd "$SUBMODULE_DIR"
-git branch --set-upstream-to=origin/main main || echo "Ветка main ещё не создана"
+if git show-ref --verify --quiet refs/heads/main; then
+    git branch --set-upstream-to=origin/main main
+else
+    echo_red "Ветка main не существует локально"
+fi
+
 
 # Создание логов
-mkdir -p scales_log/error_log
+mkdir -p "$SUBMODULE_DIR/scales_log/error_log"
 
 # Установка виртуального окружения и зависимостей
 if [ ! -d "vscales" ]; then
@@ -138,7 +144,7 @@ systemctl restart pcf.service
 if systemctl is-active --quiet pcf.service; then
     echo_green "Демон запущен"
 else
-    echo_green "Ошибка демона"
+    echo_red "Ошибка демона"
 fi
 
 echo_green "Настройка демона завершена"
@@ -146,8 +152,8 @@ echo_green "Настройка демона завершена"
 echo_green "Настройка завершена"
 
 # Условие удаления скрипта: только если нет ошибок
-if [ $? -eq 0 ]; then
-    rm -- "$0"
-    echo_green "Скрипт успешно самоудалился."
-fi
+
+rm -- "$0"
+echo_green "Скрипт успешно самоудалился."
+
 exit 0
