@@ -130,7 +130,7 @@ echo_green "Настройка виртуального окружения за�
 
 # Копирование конфигурационных файлов
 cp "$BASE_DIR"/scales_submodule/services/config.ini "$BASE_DIR"/scales_submodule/src/
-chmod 644 "$BASE_DIR"/scales_submodule/src/config.ini
+chmod 666 "$BASE_DIR"/scales_submodule/src/config.ini
 echo_green "Копирование config.ini завершено" 
 
 cp "$BASE_DIR"/scales_submodule/services/pcf.service /etc/systemd/system/
@@ -152,7 +152,7 @@ echo_green "Настройка демона завершена"
 echo_green "Настройка завершена"
 
 # Условие удаления скрипта: только если нет ошибок
-
+cd /home/pi
 rm -- "$0"
 echo_green "Скрипт успешно самоудалился."
 
